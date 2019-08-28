@@ -1,0 +1,58 @@
+---
+- name: Install build dependencies
+  apt:
+    name: "{{ packages }}"
+    update_cache: yes
+  become: yes
+  vars:
+    packages:
+    - ninja-build
+    - gettext
+    - libtool
+    - libtool-bin
+    - autoconf
+    - automake
+    - cmake
+    - g++
+    - pkg-config
+    - unzip
+    - xsel
+
+- name: Clone repo
+  git:
+    repo: git@github.com:neovim/neovim.git
+    dest: "{{ neovim.source_dir }}"
+    version: stable
+
+- name: Build from source
+  command: make CMAKE_BUILD_TYPE=Release
+  args:
+    chdir: "{{ neovim.source_dir }}"
+
+- name: Install editor
+  command: make install
+  become: yes
+  args:
+    chdir: "{{ neovim.source_dir }}"
+
+- name: Create necessary directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ neovim.autoload_dir }}"
+
+- name: Install plugin manager
+  get_url:
+    url: https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+    dest: "{{ neovim.autoload_dir }}/plug.vim"
+
+- name: Install ripgrep
+  become: yes
+  apt:
+    deb: https://github.com/BurntSushi/ripgrep/releases/download/11.0.2/ripgrep_11.0.2_amd64.deb
+
+- name: Create config
+  copy:
+    src: "{{ role_path }}/files/init.vim"
+    dest: ~/.config/nvim/init.vim

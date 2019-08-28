@@ -1,0 +1,5 @@
+---
+
+neovim:
+  source_dir: "{{ playbook_dir }}/../neovim"
+  autoload_dir: ~/.local/share/nvim/site/autoload
